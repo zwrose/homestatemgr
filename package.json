@@ -1,7 +1,7 @@
 {
   "name": "homestatemgr",
   "version": "0.0.1",
-  "description": "tracks home state and updates the alexa bridge",
+  "description": "tracks a soundtouch home state and updates the alexa bridge",
   "main": "mgr.js",
   "repository": {
     "type": "git",
@@ -11,5 +11,10 @@
   "bugs": {
     "url": "https://github.com/zwrose/homestatemgr/issues"
   },
-  "homepage": "https://github.com/zwrose/homestatemgr#readme"
+  "homepage": "https://github.com/zwrose/homestatemgr#readme",
+  "dependencies": {
+    "infinite-loop": "^0.2.2",
+    "lodash": "^4.5.1",
+    "request": "^2.69.0"
+  }
 }

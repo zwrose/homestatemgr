@@ -1,35 +1,52 @@
-var request = require('request');
-var postPath = "http://node-playground-161360.nitrousapp.com:3000/api/homeStates";
 var http = require('http');
-var currentHomeState = {};
+var request = require('request');
+var _ = require('lodash');
+var InfiniteLoop = require('infinite-loop');
+var il = new InfiniteLoop;
 
-function manageHomeState {
-    
-    
-    
+// config vars
+// BasePaths should *NOT* include a trailing '/'
+var stServerBasePath = "http://st.zwrose.com"
+var bridgeBasePath = "http://node-playground-161360.nitrousapp.com:3000";
+var bridgeID = 1;
+
+// action logic
+console.log("Starting up the updater...")
+il.add(updateHomeState, monitor).setInterval(10000).run();
+
+
+// functions
+function monitor(changeStamp) {
+    console.log("Updater has run.", changeStamp);
+}
+
+function updateHomeState(cb) {
+    // get home state from local server, and put to bridge with id
     getBoseHomeState(function(homeStateGenerated) {
-        
-        
-        
-        
-        console.log(homeStateGenerated);
         var postOptions = {
-            'uri': postPath,
-            'method': 'POST',
-            'body': homeStateGenerated,
+            'uri': bridgeBasePath + "/api/homeStates",
+            'method': 'PUT',
+            'body': {
+                'currentState': homeStateGenerated,
+                'id': bridgeID
+            },
             'json': true
         };
-        console.log(postOptions);
         request(postOptions, function (error, response, body) {
-            if (!error) {
-                console.log("Body:", body) // Show the HTML for the Google homepage.
-            } else {
+            if (error) {
                 console.log("Error:", error)
+            } else {
+                var currentdate = new Date(); 
+                cb("Synced: " + (currentdate.getMonth()+1)  + "/" 
+                + currentdate.getDate() + "/"
+                + currentdate.getFullYear() + " @ "  
+                + currentdate.getHours() + ":"  
+                + currentdate.getMinutes() + ":" 
+                + currentdate.getSeconds());
             }
         });
     });
-};
-
+}
 
 function getBoseHomeState(boseCallback) {
     var homeState = {
@@ -38,20 +55,20 @@ function getBoseHomeState(boseCallback) {
     };
 
     // go get the list of speakers from the server
-    http.get('http://st.zwrose.com/device/listAdvanced', function(res) {
+    http.get(stServerBasePath + '/device/listAdvanced', function(res) {
         var listBody = '';
         res.on('data', function(chunk) {listBody += chunk;});
         res.on('end', function() {JSON.parse(listBody).forEach(function(element, index, array) {
 
             // got get now playing info
-            http.get('http://st.zwrose.com/' + encodeURIComponent(element.name) + '/nowPlaying', function(res) {
+            http.get(stServerBasePath + '/' + encodeURIComponent(element.name) + '/nowPlaying', function(res) {
                 var nowPlayingBody = '';
                 res.on('data', function(chunk) {nowPlayingBody += chunk;});
                 res.on('end', function() {
                     var nowPlaying = JSON.parse(nowPlayingBody).nowPlaying;
 
                     // go get zone info
-                    http.get('http://st.zwrose.com/' + encodeURIComponent(element.name) + '/getZone', function(res) {
+                    http.get(stServerBasePath + '/' + encodeURIComponent(element.name) + '/getZone', function(res) {
                         var zoneBody = '';
                         res.on('data', function(chunk) {zoneBody += chunk;});
                         res.on('end', function() {
@@ -74,7 +91,7 @@ function getBoseHomeState(boseCallback) {
                             }
                             // ensure all speakers are discovered before proceeding
                             if(Object.keys(homeState.speakers).length === array.length){
-                                console.log("Current State of the User's Home:", homeState);
+                                // console.log("Current State of the User's Home:", homeState);
                                 boseCallback(homeState);
                             };
 
