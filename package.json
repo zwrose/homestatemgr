@@ -13,8 +13,6 @@
   },
   "homepage": "https://github.com/zwrose/homestatemgr#readme",
   "dependencies": {
-    "infinite-loop": "^0.2.2",
-    "lodash": "^4.5.1",
     "request": "^2.69.0"
   }
 }

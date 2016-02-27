@@ -1,8 +1,5 @@
 var http = require('http');
 var request = require('request');
-var _ = require('lodash');
-var InfiniteLoop = require('infinite-loop');
-var il = new InfiniteLoop;
 
 // config vars
 // BasePaths should *NOT* include a trailing '/'
@@ -12,15 +9,11 @@ var bridgeID = 1;
 
 // action logic
 console.log("Starting up the updater...")
-il.add(updateHomeState, monitor).setInterval(10000).run();
+updateHomeState();
 
 
 // functions
-function monitor(changeStamp) {
-    console.log("Updater has run.", changeStamp);
-}
-
-function updateHomeState(cb) {
+function updateHomeState() {
     // get home state from local server, and put to bridge with id
     getBoseHomeState(function(homeStateGenerated) {
         var postOptions = {
@@ -37,12 +30,13 @@ function updateHomeState(cb) {
                 console.log("Error:", error)
             } else {
                 var currentdate = new Date(); 
-                cb("Synced: " + (currentdate.getMonth()+1)  + "/" 
+                console.log("Updater has run. Synced: " + (currentdate.getMonth()+1)  + "/" 
                 + currentdate.getDate() + "/"
                 + currentdate.getFullYear() + " @ "  
                 + currentdate.getHours() + ":"  
                 + currentdate.getMinutes() + ":" 
                 + currentdate.getSeconds());
+                setTimeout(updateHomeState, 5000);
             }
         });
     });
