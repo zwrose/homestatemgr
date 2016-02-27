@@ -1,0 +1,15 @@
+{
+  "name": "homestatemgr",
+  "version": "0.0.1",
+  "description": "tracks home state and updates the alexa bridge",
+  "main": "mgr.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zwrose/homestatemgr.git"
+  },
+  "author": "Zach Rose",
+  "bugs": {
+    "url": "https://github.com/zwrose/homestatemgr/issues"
+  },
+  "homepage": "https://github.com/zwrose/homestatemgr#readme"
+}
