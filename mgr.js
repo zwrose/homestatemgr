@@ -3,7 +3,7 @@ var request = require('request');
 
 // config vars
 // BasePaths should *NOT* include a trailing '/'
-var stServerBasePath = "http://st.zwrose.com"
+var stServerBasePath = "http://zwrst.zwrose.com"
 var bridgeBasePath = "http://node-playground-161360.nitrousapp.com:3000";
 var bridgeID = 1;
 
@@ -29,7 +29,7 @@ function updateHomeState() {
             if (error) {
                 console.log("Error:", error)
             } else {
-                var currentdate = new Date(); 
+                var currentdate = new Date();
                 console.log("Updater has run. Synced: " + (currentdate.getMonth()+1)  + "/" 
                 + currentdate.getDate() + "/"
                 + currentdate.getFullYear() + " @ "  
@@ -61,38 +61,52 @@ function getBoseHomeState(boseCallback) {
                 res.on('end', function() {
                     var nowPlaying = JSON.parse(nowPlayingBody).nowPlaying;
 
-                    // go get zone info
-                    http.get(stServerBasePath + '/' + encodeURIComponent(element.name) + '/getZone', function(res) {
-                        var zoneBody = '';
-                        res.on('data', function(chunk) {zoneBody += chunk;});
-                        res.on('end', function() {
-                            var zoneInfo = JSON.parse(zoneBody).zone;
+                http.get(stServerBasePath + '/' + encodeURIComponent(element.name) + '/volume', function(res) {
+                    var volumeBody = '';
+                    res.on('data', function(chunk) {volumeBody += chunk;});
+                    res.on('end', function() {
+                        var volumeObj = JSON.parse(volumeBody);
+                        var currentVolume = volumeObj.volume.actualvolume;
 
-                            // get the device names into the array
-                            homeState.speakers[element.name.toLowerCase()] = element;
+                        // go get zone info
+                        http.get(stServerBasePath + '/' + encodeURIComponent(element.name) + '/getZone', function(res) {
+                            var zoneBody = '';
+                            res.on('data', function(chunk) {zoneBody += chunk;});
+                            res.on('end', function() {
+                                var zoneInfo = JSON.parse(zoneBody).zone;
 
-                            // check for now playing
-                            if (nowPlaying.source != 'STANDBY') {
-                                homeState.speakers[element.name.toLowerCase()].nowPlaying = nowPlaying;
+                                // get the device names into the array
+                                homeState.speakers[element.name.toLowerCase()] = element;
+                                
+                                // add volume
+                                homeState.speakers[element.name.toLowerCase()].currentVolume = currentVolume;
 
-                                // check if master
-                                if (!zoneInfo.master || zoneInfo.master == element.mac_address){
-                                    homeState.zonesPlaying.push(element.name.toLowerCase());
-                                    if(zoneInfo.master == element.mac_address) {
-                                        homeState.speakers[element.name.toLowerCase()].isMaster = true;
+                                // check for now playing
+                                if (nowPlaying.source != 'STANDBY') {
+                                    homeState.speakers[element.name.toLowerCase()].nowPlaying = nowPlaying;
+
+                                    // check if master
+                                    if (!zoneInfo.master || zoneInfo.master == element.mac_address){
+                                        homeState.zonesPlaying.push(element.name.toLowerCase());
+                                        if(zoneInfo.master == element.mac_address) {
+                                            homeState.speakers[element.name.toLowerCase()].isMaster = true;
+                                        }
                                     }
                                 }
-                            }
-                            // ensure all speakers are discovered before proceeding
-                            if(Object.keys(homeState.speakers).length === array.length){
-                                // console.log("Current State of the User's Home:", homeState);
-                                boseCallback(homeState);
-                            };
+                                // ensure all speakers are discovered before proceeding
+                                if(Object.keys(homeState.speakers).length === array.length){
+                                    // console.log("Current State of the User's Home:", homeState);
+                                    boseCallback(homeState);
+                                };
 
+                            });
+                        }).on('error', function(e) {
+                            console.log("Got error: " + e.message);
                         });
-                    }).on('error', function(e) {
-                        console.log("Got error: " + e.message);
                     });
+                }).on('error', function(e) {
+                    console.log("Got error: " + e.message);
+                });
                 });
             }).on('error', function(e) {
                 console.log("Got error: " + e.message);
